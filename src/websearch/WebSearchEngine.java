@@ -16,7 +16,7 @@ import java.util.Scanner;
 import org.jsoup.Jsoup;
 
 public class WebSearchEngine {
-	private final String splitting = "[[ ]*|[,]*|[)]*|[(]*|[\"]*|[;]*|[-]*|[:]*|[']*|[í]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+";
+	private final String splitting = "[[ ]*|[,]*|[)]*|[(]*|[\"]*|[;]*|[-]*|[:]*|[']*|[Ì]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+";
 	private TrieST<HashMap<String, Integer>> webPageWordsTrie;
 	List<String> pageNames;
 	HashMap<String, Integer> frequency;
@@ -27,7 +27,17 @@ public class WebSearchEngine {
 	}
 
 	private void parseWebPages(String webpageDirectoryPath) {
-		// ToDo: can give null pointer
+		In in = new In(webpageDirectoryPath);
+		String[] allwords = null;
+		while (!in.isEmpty()) {
+			allwords = in.readAllLines();
+		}
+		System.out.println(allwords.length);
+		for(String s : allwords) {
+			this.pageNames.add(s);
+		}
+
+		/*// ToDo: can give null pointer
 		File webpageDirectory = new File(webpageDirectoryPath);
 		File[] htmlFilesList = webpageDirectory.listFiles();
 
@@ -35,7 +45,7 @@ public class WebSearchEngine {
 		for (File s : htmlFilesList) {
 			if (s.isFile())
 				this.pageNames.add(s.getAbsolutePath());
-		}
+		}*/
 
 		// iterate through all the pages and add the words to Trie
 		for (int i = 0; i < this.pageNames.size(); i++) {
@@ -80,9 +90,22 @@ public class WebSearchEngine {
 
 	// Web Crawler using file name
 	private String webCrawler(String currentPageName) throws IOException {
-		File currentFile = new File(currentPageName);
+		/*File currentFile = new File(currentPageName);
 		org.jsoup.nodes.Document doc = Jsoup.parse(currentFile, "UTF-8");
 		return doc.body().text();
+*/
+
+		org.jsoup.nodes.Document doc = null;
+		try {
+			doc = Jsoup.connect(currentPageName).get();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.err.println(e.getMessage()+"\t "+currentPageName);
+		}
+
+		return doc==null?"":doc.body().text();
+
 	}
 
 	private List<String> cleanText(String text) {
@@ -97,7 +120,7 @@ public class WebSearchEngine {
 
 		for (int currentWordIndex = 0; currentWordIndex < words.length; currentWordIndex++) {
 			String currentWord = words[currentWordIndex];
-			
+
 			if (currentWordIndex == 0)
 				urlList.putAll(this.webPageWordsTrie.get(currentWord));
 			else {
@@ -108,7 +131,7 @@ public class WebSearchEngine {
 
 		return urlList;
 	}
-	
+
 	private Map<String, Integer> sortWebSearch(Map<String, Integer> urlList) {
 		return sortByValue((HashMap<String, Integer>) urlList);
 	}
@@ -133,8 +156,8 @@ public class WebSearchEngine {
 		return temp;
 	}
 
-	public static void main(String arg[]) throws IOException {
-		String webPageDirectoryPath = "src/W3C Web Pages";
+	public static void main(String args[]) throws IOException {
+		String webPageDirectoryPath = "src/W3C Web Pages/output.txt";
 		// ToDo: different path for MAC and WINDOWS
 		WebSearchEngine webSearchEngine = new WebSearchEngine();
 		webSearchEngine.parseWebPages(webPageDirectoryPath);
@@ -152,7 +175,7 @@ public class WebSearchEngine {
 			}
 
 			System.out.println("Do you want to continue yes/no");
-			continueValue = s.nextLine();
+			continueValue = s.nextLine().trim();
 		} while (continueValue.toLowerCase().equals("yes"));
 
 	}
