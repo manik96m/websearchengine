@@ -15,9 +15,6 @@ import java.util.Scanner;
 
 import org.jsoup.Jsoup;
 
-import textprocessing.In;
-import textprocessing.TrieST;
-
 public class WebSearchEngine {
 	private final String splitting = "[[ ]*|[,]*|[)]*|[(]*|[\"]*|[;]*|[-]*|[:]*|[']*|[Ì]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+";
 	private TrieST<HashMap<String, Integer>> webPageWordsTrie;
@@ -36,19 +33,9 @@ public class WebSearchEngine {
 			allwords = in.readAllLines();
 		}
 		System.out.println(allwords.length);
-		for(String s : allwords) {
+		for (String s : allwords) {
 			this.pageNames.add(s);
 		}
-
-		/*// ToDo: can give null pointer
-		File webpageDirectory = new File(webpageDirectoryPath);
-		File[] htmlFilesList = webpageDirectory.listFiles();
-
-		// adding HTML file names to the list
-		for (File s : htmlFilesList) {
-			if (s.isFile())
-				this.pageNames.add(s.getAbsolutePath());
-		}*/
 
 		// iterate through all the pages and add the words to Trie
 		for (int i = 0; i < this.pageNames.size(); i++) {
@@ -94,22 +81,14 @@ public class WebSearchEngine {
 
 	// Web Crawler using file name
 	private String webCrawler(String currentPageName) throws IOException {
-		/*File currentFile = new File(currentPageName);
-		org.jsoup.nodes.Document doc = Jsoup.parse(currentFile, "UTF-8");
-		return doc.body().text();
-*/
-
 		org.jsoup.nodes.Document doc = null;
 		try {
 			doc = Jsoup.connect(currentPageName).get();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			System.err.println(e.getMessage()+"\t "+currentPageName);
+			System.err.println(e.getMessage() + "\t " + currentPageName);
 		}
 
-		return doc==null?"":doc.body().text();
-
+		return doc == null ? "" : doc.body().text();
 	}
 
 	private List<String> cleanText(String text) {
@@ -121,8 +100,7 @@ public class WebSearchEngine {
 	private Map<String, Integer> webSearch(String searchWord) {
 		final Map<String, Integer> urlList = new HashMap<String, Integer>();
 		String[] words = searchWord.split(splitting);
-		try
-		{
+		try {
 			for (int currentWordIndex = 0; currentWordIndex < words.length; currentWordIndex++) {
 				String currentWord = words[currentWordIndex];
 				if (currentWordIndex == 0)
@@ -132,10 +110,8 @@ public class WebSearchEngine {
 					this.webPageWordsTrie.get(currentWord).forEach((k, v) -> urlList.merge(k, v, Integer::sum));
 				}
 			}
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("\t NO URL FOUND");
-
 		}
 
 		return urlList;
@@ -179,21 +155,20 @@ public class WebSearchEngine {
 			System.out.println("-----------------------List of URL's/File Names in sorted order---------------");
 			Formatter UrlFormat = new Formatter();
 
-			Map<String, Integer> urlList = webSearchEngine.sortWebSearch(webSearchEngine.webSearch(searchWord.toLowerCase()));
-			if(!urlList.isEmpty())
-			{
+			Map<String, Integer> urlList = webSearchEngine
+					.sortWebSearch(webSearchEngine.webSearch(searchWord.toLowerCase()));
+			if (!urlList.isEmpty()) {
 				UrlFormat.format("%20s %62s", "URL", "Frequency");
 				System.out.println(UrlFormat);
 			}
 			for (Map.Entry<String, Integer> entry : urlList.entrySet()) {
-				//System.out.println("%15s %12s"+ entry.getKey() + " " + entry.getValue());
+				// System.out.println("%15s %12s"+ entry.getKey() + " " + entry.getValue());
 				Formatter UrlFormat2 = new Formatter();
-				UrlFormat2.format("%15s %42s" ,entry.getKey(), entry.getValue());
+				UrlFormat2.format("%15s %42s", entry.getKey(), entry.getValue());
 				System.out.println(UrlFormat2);
 			}
 			System.out.println("Do you want to continue yes/no");
 			continueValue = s.nextLine().trim();
 		} while (continueValue.toLowerCase().equals("yes"));
-
 	}
 }
