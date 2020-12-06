@@ -27,7 +27,7 @@ public class WebCrawler {
             Document doc = Jsoup.connect("http://www.google.com").get();  
             Elements links = doc.select("a[href]");  
             System.out.println("SIZE "+links.size());
-            PrintWriter writer = new PrintWriter("output.txt");
+            PrintWriter writer = new PrintWriter("src/W3C Web Pages/output.txt");
             writer.print("");
             writer.close();
             for (Element link : links) {  
