@@ -1,11 +1,11 @@
 package websearch;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -16,7 +16,7 @@ import java.util.Scanner;
 import org.jsoup.Jsoup;
 
 public class WebSearchEngine {
-	private final String splitting = "[[ ]*|[,]*|[)]*|[(]*|[\"]*|[;]*|[-]*|[:]*|[']*|[í]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+";
+	private final String splitting = "[[ ]*|[,]*|[)]*|[(]*|[\"]*|[;]*|[-]*|[:]*|[']*|[Ì]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+";
 	private TrieST<HashMap<String, Integer>> webPageWordsTrie;
 	List<String> pageNames;
 	HashMap<String, Integer> frequency;
@@ -27,19 +27,20 @@ public class WebSearchEngine {
 	}
 
 	private void parseWebPages(String webpageDirectoryPath) {
-		// ToDo: can give null pointer
-		File webpageDirectory = new File(webpageDirectoryPath);
-		File[] htmlFilesList = webpageDirectory.listFiles();
-
-		// adding HTML file names to the list
-		for (File s : htmlFilesList) {
-			if (s.isFile())
-				this.pageNames.add(s.getAbsolutePath());
+		In in = new In(webpageDirectoryPath);
+		String[] allwords = null;
+		while (!in.isEmpty()) {
+			allwords = in.readAllLines();
+		}
+		System.out.println(allwords.length);
+		for (String s : allwords) {
+			this.pageNames.add(s);
 		}
 
 		// iterate through all the pages and add the words to Trie
 		for (int i = 0; i < this.pageNames.size(); i++) {
 			String currentPageName = this.pageNames.get(i);
+			System.out.println(currentPageName);
 			String currentPageText;
 			List<String> urlWords;
 
@@ -80,9 +81,14 @@ public class WebSearchEngine {
 
 	// Web Crawler using file name
 	private String webCrawler(String currentPageName) throws IOException {
-		File currentFile = new File(currentPageName);
-		org.jsoup.nodes.Document doc = Jsoup.parse(currentFile, "UTF-8");
-		return doc.body().text();
+		org.jsoup.nodes.Document doc = null;
+		try {
+			doc = Jsoup.connect(currentPageName).get();
+		} catch (IOException e) {
+			System.err.println(e.getMessage() + "\t " + currentPageName);
+		}
+
+		return doc == null ? "" : doc.body().text();
 	}
 
 	private List<String> cleanText(String text) {
@@ -94,21 +100,23 @@ public class WebSearchEngine {
 	private Map<String, Integer> webSearch(String searchWord) {
 		final Map<String, Integer> urlList = new HashMap<String, Integer>();
 		String[] words = searchWord.split(splitting);
-
-		for (int currentWordIndex = 0; currentWordIndex < words.length; currentWordIndex++) {
-			String currentWord = words[currentWordIndex];
-			
-			if (currentWordIndex == 0)
-				urlList.putAll(this.webPageWordsTrie.get(currentWord));
-			else {
-				urlList.keySet().retainAll(this.webPageWordsTrie.get(words[currentWordIndex]).keySet());
-				this.webPageWordsTrie.get(currentWord).forEach((k, v) -> urlList.merge(k, v, Integer::sum));
+		try {
+			for (int currentWordIndex = 0; currentWordIndex < words.length; currentWordIndex++) {
+				String currentWord = words[currentWordIndex];
+				if (currentWordIndex == 0)
+					urlList.putAll(this.webPageWordsTrie.get(currentWord));
+				else {
+					urlList.keySet().retainAll(this.webPageWordsTrie.get(words[currentWordIndex]).keySet());
+					this.webPageWordsTrie.get(currentWord).forEach((k, v) -> urlList.merge(k, v, Integer::sum));
+				}
 			}
+		} catch (Exception e) {
+			System.out.println("\t NO URL FOUND");
 		}
 
 		return urlList;
 	}
-	
+
 	private Map<String, Integer> sortWebSearch(Map<String, Integer> urlList) {
 		return sortByValue((HashMap<String, Integer>) urlList);
 	}
@@ -134,7 +142,7 @@ public class WebSearchEngine {
 	}
 
 	public static void main(String arg[]) throws IOException {
-		String webPageDirectoryPath = "src/W3C Web Pages";
+		String webPageDirectoryPath = "src/W3C Web Pages/output.txt";
 		// ToDo: different path for MAC and WINDOWS
 		WebSearchEngine webSearchEngine = new WebSearchEngine();
 		webSearchEngine.parseWebPages(webPageDirectoryPath);
@@ -144,16 +152,23 @@ public class WebSearchEngine {
 		do {
 			System.out.println("Enter the word/words to fetch top URL's/Files");
 			String searchWord = s.nextLine();
-			Map<String, Integer> urlList = webSearchEngine.sortWebSearch(webSearchEngine.webSearch(searchWord.toLowerCase()));
+			System.out.println("-----------------------List of URL's/File Names in sorted order---------------");
+			Formatter UrlFormat = new Formatter();
 
-			System.out.println("-----------List of URL's/File Names in sorted order----------");
-			for (Map.Entry<String, Integer> entry : urlList.entrySet()) {
-				System.out.println(entry.getKey() + " " + entry.getValue());
+			Map<String, Integer> urlList = webSearchEngine
+					.sortWebSearch(webSearchEngine.webSearch(searchWord.toLowerCase()));
+			if (!urlList.isEmpty()) {
+				UrlFormat.format("%20s %62s", "URL", "Frequency");
+				System.out.println(UrlFormat);
 			}
-
+			for (Map.Entry<String, Integer> entry : urlList.entrySet()) {
+				// System.out.println("%15s %12s"+ entry.getKey() + " " + entry.getValue());
+				Formatter UrlFormat2 = new Formatter();
+				UrlFormat2.format("%15s %42s", entry.getKey(), entry.getValue());
+				System.out.println(UrlFormat2);
+			}
 			System.out.println("Do you want to continue yes/no");
-			continueValue = s.nextLine();
+			continueValue = s.nextLine().trim();
 		} while (continueValue.toLowerCase().equals("yes"));
-
 	}
 }
