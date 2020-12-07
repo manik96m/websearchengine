@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -32,7 +31,8 @@ public class WebSearchEngine {
 		while (!in.isEmpty()) {
 			allwords = in.readAllLines();
 		}
-		System.out.println(allwords.length);
+		System.out.println("There are total " + allwords.length + " URL's in the file.");
+		System.out.println("Parsing the webpages...");
 		for (String s : allwords) {
 			this.pageNames.add(s);
 		}
@@ -111,7 +111,7 @@ public class WebSearchEngine {
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("\t NO URL FOUND");
+			System.out.println("\t No URL found for the search performed.");
 		}
 
 		return urlList;
@@ -143,7 +143,6 @@ public class WebSearchEngine {
 
 	public static void main(String arg[]) throws IOException {
 		String webPageDirectoryPath = "src/W3C Web Pages/output.txt";
-		// ToDo: different path for MAC and WINDOWS
 		WebSearchEngine webSearchEngine = new WebSearchEngine();
 		webSearchEngine.parseWebPages(webPageDirectoryPath);
 		Scanner s = new Scanner(System.in);
@@ -153,19 +152,14 @@ public class WebSearchEngine {
 			System.out.println("Enter the word/words to fetch top URL's/Files");
 			String searchWord = s.nextLine();
 			System.out.println("-----------------------List of URL's/File Names in sorted order---------------");
-			Formatter UrlFormat = new Formatter();
 
 			Map<String, Integer> urlList = webSearchEngine
 					.sortWebSearch(webSearchEngine.webSearch(searchWord.toLowerCase()));
 			if (!urlList.isEmpty()) {
-				UrlFormat.format("%20s %62s", "URL", "Frequency");
-				System.out.println(UrlFormat);
+				System.out.println("Frequency\tURL");
 			}
 			for (Map.Entry<String, Integer> entry : urlList.entrySet()) {
-				// System.out.println("%15s %12s"+ entry.getKey() + " " + entry.getValue());
-				Formatter UrlFormat2 = new Formatter();
-				UrlFormat2.format("%15s %42s", entry.getKey(), entry.getValue());
-				System.out.println(UrlFormat2);
+				System.out.println(entry.getValue() + "\t\t" + entry.getKey());
 			}
 			System.out.println("Do you want to continue yes/no");
 			continueValue = s.nextLine().trim();
